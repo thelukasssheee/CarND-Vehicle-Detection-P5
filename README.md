@@ -53,6 +53,8 @@ I started by reading in all the `vehicle` and `non-vehicle` images.  Here is an 
 
 ![alt text](./output_images/md_car_notcar_example.png)
 
+The actual feature extraction functions can be found in the cells 1c and 1d for the training images of `P5_Preparation.ipynb`. 
+
 ##### Balancing
 The dataset consisted of **8968** car images and **8792** not-car images. With a quantitative difference of approximately 2%, the dataset was already balanced quite well. Further adjustments to balance the datasets even more were therefore not necessary. 
 
@@ -99,14 +101,18 @@ Below you can see an example for a color histogram for each color channel from a
 
 ![alt text](./output_images/md_color_hist_feature_example.png)
 
-I stacked all three feature sets and normalized them using the `StandardScaler()` function from the `sklearn` toolbox. Finally, the array was flattened. 
+I stacked all three feature sets and normalized them using the `StandardScaler()` function from the `sklearn` toolbox. Finally, the array was flattened.
+
+The code for these operations can be found in section 1e of `P5_Preparation.ipynb`.
 
 ##### Training the SVM
-For training of the SVM, the function `LinearSVC()` from `sklearn` toolbox was used with no additional parameters set.
+For training the SVM, the function `LinearSVC()` from `sklearn` toolbox was used with no additional parameters set.
 
 After all optimizations, an **overall accuracy >99.2%** was achieved.
 
 The parameters, the linear scaler and the trained SVM were stored in the pickle file `svm_scaler_result.pkl`, which is later used by the `P5_Final.ipynb` IPython notebook.
+
+In section 1f of `P5_Preparation.ipynb` these steps can be found.
 
 ### Sliding Window Search
 
@@ -137,6 +143,8 @@ The corresponding search window sizes are exemplarily shown in the following pic
 ![alt text](./output_images/md_final_vehicle_detection_scale1.81.png)
 ![alt text](./output_images/md_final_vehicle_detection_scale2.22.png)
 
+The final sliding window search algorithm can be found in code cell `Actual pipeline` of `P5_Final.ipynb` in the functions `process_image()` and `detect_cars()`. 
+
 
 #### 2. Show some examples of test images to demonstrate how your pipeline is working.  What did you do to optimize the performance of your classifier?
 
@@ -166,6 +174,17 @@ I recorded the positions of positive detections in each frame of the video. From
 1. with an absolute pass criteria on the heat map (pass: >= 2 detections)
 2. with a relative pass criteria (pass: >= 0.2*max heat map value)
 
+The code lines for this can be found in the function `process_image()`, line 88 to 92:
+
+```
+# Store heatmap in double ended queue buffer
+# Calculate averaged heatmap over 10 frames (i.e. buffer size)
+buffer.append(heatmap)
+heatmap_avg = np.average(buffer,0)
+heatmap_avg = apply_threshold(heatmap_avg, np.max(heatmap_avg)*0.2)
+heatmap_avg = apply_threshold(heatmap_avg, 3)
+```    
+
 After this step, I used `scipy.ndimage.measurements.label()` to identify individual blobs in the heatmap and apply a label to each heatmap. The idea is, that each blob is supposed to correspond to a vehicle. I constructed bounding boxes to cover the area of each blob detected.
 
 Here's an example result showing the heatmap based on the test image dataset. The image's purpose is to show the impact of thresholding to remove false positives.
@@ -188,7 +207,7 @@ It was a lot of fun to train the SVM and tweak the parameters, since the SVM was
 
 I trained it using three features: histogram of oriented gradients, spatial features and color histograms. This was necessary to obtain a high accuracy on the training dataset.
 
-During completion of this project, I started to wonder, whether the usage of spatial information was actually a helpful thing to do. Of course, SVM became able to perform extremely well on the train and test data set. My thought is, that using spatial features helps the codec to perform well on the trained images, but might inhibit the SVM from identifying cars in a more generalized way. I could imagine, this leads to some sort of overfitting and you might be better off with a little less accuracy on test and valdiation dataset, but on the other hand achieving a better vehicle detection in real world situations (e.g. different car brands, different countries etc.). 
+During completion of this project, I started to wonder, whether the usage of spatial information was actually a helpful thing to do. Of course, SVM became able to perform extremely well on the train and test data set. My thought is, that using spatial features helps the codec to perform well on the trained images, but might inhibit the SVM from identifying cars in a more generalized way. I could imagine, this leads to some sort of overfitting and you might be better off with a little less accuracy on test and valdiation dataset, but on the other hand achieving a better vehicle detection in real world situations (e.g. different car brands, different colors etc.). 
 
 It would have been interesting to try that, but at the end of the project, I ran out of time.
 
@@ -196,4 +215,18 @@ My pipeline is likely failing for cars that are very far away. This is due to th
 
 One improvement I would really like to introduce is a better separation of the cars, especially when they are very close together. One idea to achieve this is to check the size of the detected label. As soon as it is 2 times as long as high, split in the middle.
 
-Overall, a fun project to work on! It's amazing to see what is achievable with a few hundred lines of code!
+##### Potential speed improvements
+
+While writing this summary, one further option for speed improvement came to my mind. 
+
+Search windows with a certain scale should only be applied in areas, where the cars are likely to have the approximate search window size! Currently, the script is applying the small search windows also at the bottom of the image, which does not make too much sense. This could be limited to areas, where vehicles are actually that small. I guess this could yield a 5x speed boost. 
+
+Since for the video a buffer for averaging over video frames was applied, further parameters might be tweaked towards higher calculation speed. E.g smaller overlap, fewer different scales etc. Speed boost likely in the order of 3x-10x.
+
+Definitely, my first step would be to install some sort of profiling tool (e.g. `line_profiler`) and do a proper line per line speed profiling assessment. Usually, this reveals very quickly which lines of code need optimization.
+
+##### Conclusion
+
+Overall, a fun project to work on! It's amazing to see what is achievable with a few hundred lines of code! 
+
+Thank you Udacity for this great experience!
