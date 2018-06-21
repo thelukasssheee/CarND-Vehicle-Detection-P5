@@ -66,8 +66,6 @@ For HOG feature extraction, the function `skimage.hog()` was applied and the fol
 
 Before passing the images to the HOG feature extraction, I also tried whether a different color space might yield better results. The color channels RGB, HSV, LUV, HLS, YUV, YCrCb were tried. 
 
-parameters (`orientations`, `pixels_per_cell`, and `cells_per_block`).  I grabbed random images from each of the two classes and displayed them to get a feel for what the `skimage.hog()` output looks like.
-
 Here is an example using the first channel of `YCrCb` color space and HOG parameters of `orientations=8`, `pixels_per_cell=(8, 8)` and `cells_per_block=(2, 2)`:
 
 ![alt text](./output_images/md_hog_feature_example.png)
@@ -77,11 +75,11 @@ Here is an example using the first channel of `YCrCb` color space and HOG parame
 
 ##### Splitting the dataset
 
-I tried various combinations of parameters from within the range mentioned above. The quality of the parameters was assessed by shuffling splitting the dataset into roughly 80% training data and 20% test data by using the function `train_test_split()` from `sklearn` library. 
+The quality of the parameters was assessed by shuffling splitting the dataset into roughly 80% training data and 20% test data by using the function `train_test_split()` from `sklearn` library. 
 
 ##### Quality assessment
 
-Every set of parameters was rated by looking at the achieved accuracy on the test data set. 
+I tried various combinations of parameters from within the range mentioned above. Every set of parameters was rated by looking at the achieved accuracy on the test data set. 
 
 ##### Final HOG parameters
 
@@ -101,22 +99,22 @@ Below you can see an example for a color histogram for each color channel from a
 
 ![alt text](./output_images/md_color_hist_feature_example.png)
 
-I stacked all three feature sets and normalized them using the `StandardScaler()` function from the sklearn toolbox. Finally, the array was flattened. 
+I stacked all three feature sets and normalized them using the `StandardScaler()` function from the `sklearn` toolbox. Finally, the array was flattened. 
 
 ##### Training the SVM
 For training of the SVM, the function `LinearSVC()` from `sklearn` toolbox was used with no additional parameters set.
 
 After all optimizations, an **overall accuracy >99.2%** was achieved.
 
-All parameters, the linear scaler and the trained SVM were stored in the pickle file `svm_scaler_result.pkl`, which is later used by the `P5_Final.ipynb` IPython notebook.
+The parameters, the linear scaler and the trained SVM were stored in the pickle file `svm_scaler_result.pkl`, which is later used by the `P5_Final.ipynb` IPython notebook.
 
 ### Sliding Window Search
 
 #### 1. Describe how (and identify where in your code) you implemented a sliding window search.  How did you decide what scales to search and how much to overlap windows?
 
-Since the relevant features of this project (cars) are typically found on the road, I decided to pass only the image area in y direction from pixel 400 (horizon) to 656 (upper end of the hood). The remaining height is a multiple of 64 pixels, which is the dimension of the training images used to train the SVM.
+Since the relevant features (cars) of this project are typically found on the road, I decided to pass only the image area in y direction from pixel 400 (horizon) to 656 (upper end of the hood). The remaining height is a multiple of 64 pixels, which is the dimension of the training images used to train the SVM and helps the algorithm to perform more efficient.
 
-In this area, a sliding window search based on two parameters was applied:
+Within this picture area, a sliding window search based on two parameters was applied:
 
 * `scale`: scaling factor for the actual size of a search window as multiples of 64x64
 * `cells_per_step`: amount of cells (cell size = 8x8) the search window is shifted while searching
@@ -146,7 +144,7 @@ Ultimately I searched on XXXXTODO scales using YCrCb 3-channel HOG features, spa
 
 ![alt text](./output_images/md_final_vehicle_detection_scale2.22_all_testimages.png)
 
-On image `test3.jpg`, a **false negative** detection is visible. This is due to the large scale (2.2188) which was applied. By applying a smaller scale, this false negative is removed.
+On image `test3.jpg`, a **false negative** detection is visible. This is due to the large scale (2.2188) which was applied. By applying a smaller scale, this false negative disappears again. In a later stage, when multiple scales are applied and combined to a heat map, you can get rid of this false reading. 
 
 Occasionally, as visible on image `test5.jpg`, you can also see a **false positive** detections. The reduction of false positives takes place later in the video implementation and is explained in the following chapter.
 
@@ -168,21 +166,15 @@ I recorded the positions of positive detections in each frame of the video. From
 1. with an absolute pass criteria on the heat map (pass: >= 2 detections)
 2. with a relative pass criteria (pass: >= 0.2*max heat map value)
 
-TODO: hier weitermachen
+After this step, I used `scipy.ndimage.measurements.label()` to identify individual blobs in the heatmap and apply a label to each heatmap. The idea is, that each blob is supposed to correspond to a vehicle. I constructed bounding boxes to cover the area of each blob detected.
 
-I then used `scipy.ndimage.measurements.label()` to identify individual blobs in the heatmap.  I then assumed each blob corresponded to a vehicle.  I constructed bounding boxes to cover the area of each blob detected.  
+Here's an example result showing the heatmap based on the test image dataset. The image's purpose is to show the impact of thresholding to remove false positives.
 
-Here's an example result showing the heatmap based on the test image dataset.  a series of frames of video, the result of `scipy.ndimage.measurements.label()` and the bounding boxes then overlaid on the last frame of video:
+![alt text](./output_images/test5_heatmaps_and_thresholding.png)
 
-### Here are six frames and their corresponding heatmaps:
+It can be clearly seen, that double thresholding (absolute and relative) was in fact removing lots of false positives and also helped separating the vehicles from each other.
 
-![alt text][image5]
-
-### Here is the output of `scipy.ndimage.measurements.label()` on the integrated heatmap from all six frames:
-![alt text][image6]
-
-### Here the resulting bounding boxes are drawn onto the last frame in the series:
-![alt text][image7]
+However, if the video was processed with the steps mentioned above, there were still many frames where vehicles were not detected at all, i.e. **false negatives**. I was able to solve this issue by adding a buffer, which was holding the detections from the last 10 frames. 
 
 
 
@@ -192,5 +184,16 @@ Here's an example result showing the heatmap based on the test image dataset.  a
 
 #### 1. Briefly discuss any problems / issues you faced in your implementation of this project.  Where will your pipeline likely fail?  What could you do to make it more robust?
 
-Here I'll talk about the approach I took, what techniques I used, what worked and why, where the pipeline might fail and how I might improve it if I were going to pursue this project further.  
+It was a lot of fun to train the SVM and tweak the parameters, since the SVM was quickly achieving high accuracys. 
 
+I trained it using three features: histogram of oriented gradients, spatial features and color histograms. This was necessary to obtain a high accuracy on the training dataset.
+
+During completion of this project, I started to wonder, whether the usage of spatial information was actually a helpful thing to do. Of course, SVM became able to perform extremely well on the train and test data set. My thought is, that using spatial features helps the codec to perform well on the trained images, but might inhibit the SVM from identifying cars in a more generalized way. I could imagine, this leads to some sort of overfitting and you might be better off with a little less accuracy on test and valdiation dataset, but on the other hand achieving a better vehicle detection in real world situations (e.g. different car brands, different countries etc.). 
+
+It would have been interesting to try that, but at the end of the project, I ran out of time.
+
+My pipeline is likely failing for cars that are very far away. This is due to the search window size. I decided to skip very small ones to keep the performance of the script up as much as possible. 
+
+One improvement I would really like to introduce is a better separation of the cars, especially when they are very close together. One idea to achieve this is to check the size of the detected label. As soon as it is 2 times as long as high, split in the middle.
+
+Overall, a fun project to work on! It's amazing to see what is achievable with a few hundred lines of code!
