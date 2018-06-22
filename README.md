@@ -148,7 +148,7 @@ The final sliding window search algorithm can be found in code cell `Actual pipe
 
 #### 2. Show some examples of test images to demonstrate how your pipeline is working.  What did you do to optimize the performance of your classifier?
 
-Ultimately I searched on XXXXTODO scales using YCrCb 3-channel HOG features, spatially binned color and histograms of color in the feature vector, which provided a the above mentioned accuracy on the test data set of >99.2%. Here are some example images using a scale of 2.2188:
+Ultimately I searched on 5 scales using YCrCb 3-channel HOG features, spatially binned color and histograms of color in the feature vector, which provided a the above mentioned accuracy on the test data set of >99.2%. Here are some example images using a scale of 2.2188:
 
 ![alt text](./output_images/md_final_vehicle_detection_scale2.22_all_testimages.png)
 
@@ -164,7 +164,7 @@ Overall, the vehicles were detected quite well on the test images. This shows, t
 
 #### 1. Provide a link to your final video output.  Your pipeline should perform reasonably well on the entire project video (somewhat wobbly or unstable bounding boxes are ok as long as you are identifying the vehicles most of the time with minimal false positives.)
 
-Here's a [link to my video result](./project_video.mp4). It can also be watched on [YouTube](ASDF_TODO)
+Here's a [link to my video result](./out_final.mp4). It can also be watched on [YouTube](https://youtu.be/QomfCJwqvNA).
 
 
 #### 2. Describe how (and identify where in your code) you implemented some kind of filter for false positives and some method for combining overlapping bounding boxes.
@@ -205,15 +205,11 @@ However, if the video was processed with the steps mentioned above, there were s
 
 It was a lot of fun to train the SVM and tweak the parameters, since the SVM was quickly achieving high accuracys. 
 
-I trained it using three features: histogram of oriented gradients, spatial features and color histograms. This was necessary to obtain a high accuracy on the training dataset.
-
-During completion of this project, I started to wonder, whether the usage of spatial information was actually a helpful thing to do. Of course, SVM became able to perform extremely well on the train and test data set. My thought is, that using spatial features helps the codec to perform well on the trained images, but might inhibit the SVM from identifying cars in a more generalized way. I could imagine, this leads to some sort of overfitting and you might be better off with a little less accuracy on test and valdiation dataset, but on the other hand achieving a better vehicle detection in real world situations (e.g. different car brands, different colors etc.). 
-
-It would have been interesting to try that, but at the end of the project, I ran out of time.
-
 My pipeline is likely failing for cars that are very far away. This is due to the search window size. I decided to skip very small ones to keep the performance of the script up as much as possible. 
 
 One improvement I would really like to introduce is a better separation of the cars, especially when they are very close together. One idea to achieve this is to check the size of the detected label. As soon as it is 2 times as long as high, split in the middle.
+
+Furthermore, there still remain some false negative and false positive readings, which could be reduced with further parameter optimization. 
 
 ##### Potential speed improvements
 
