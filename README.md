@@ -164,7 +164,7 @@ Overall, the vehicles were detected quite well on the test images. This shows, t
 
 #### 1. Provide a link to your final video output.  Your pipeline should perform reasonably well on the entire project video (somewhat wobbly or unstable bounding boxes are ok as long as you are identifying the vehicles most of the time with minimal false positives.)
 
-Here's a [link to my video result](./out_final.mp4). It can also be watched on [YouTube](https://youtu.be/QomfCJwqvNA).
+Here's a [link to my video result](./out_final.mp4). It can also be watched on [YouTube](https://youtu.be/FCcLo-t_kBM).
 
 
 #### 2. Describe how (and identify where in your code) you implemented some kind of filter for false positives and some method for combining overlapping bounding boxes.
